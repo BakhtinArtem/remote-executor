@@ -21,6 +21,10 @@ spec:
             name: jar-volume
         ports:
         - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
       volumes:
         - name: jar-volume
           emptyDir:
