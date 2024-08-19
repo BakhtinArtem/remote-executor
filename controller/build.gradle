@@ -16,7 +16,7 @@ jib {
 		}
 	}
 	to {
-		image = 'aape2k/re-contoller'
+		image = 'aape2k/re-controller'
 		auth {
 			username = USERNAME
 			password = PASSWORD
@@ -44,6 +44,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.boot:spring-boot-starter-graphql'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.cloud:spring-cloud-starter-kubernetes-fabric8-all:3.1.2'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'

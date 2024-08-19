@@ -1,0 +1,4 @@
+Tunneling localhost to minikube: kubectl port-forward svc/controller-service 8080:8080
+Running bash inside pod: k exec -it runner-deployment-576f549dc-tgxhq -- bash
+Service account creation: kubectl create serviceaccount job-manager -n default
+

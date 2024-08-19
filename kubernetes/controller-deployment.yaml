@@ -1,0 +1,30 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-deployment
+spec:
+  selector:
+    matchLabels:
+      app: controller
+  template:
+    metadata:
+      labels:
+        app: controller
+    spec:
+      containers:
+        - image: aape2k/re-controller
+          name: controller-image
+          env:
+            - name: JAR_FILES_PATH
+              value: "/jars"
+          volumeMounts:
+            - mountPath: "/jars"
+              name: jars-storage
+          ports:
+            - containerPort: 80
+      volumes:
+        - name: jars-storage
+          persistentVolumeClaim:
+            claimName: local-pvc
+---

@@ -24,6 +24,7 @@ public class WorkerController {
         return ResponseEntity.badRequest().body("Method is not implemented");
     }
 
+//    same as in postman -> load file to cloud and then choose from dropdown, so we may use on jar multiple times
     @PostMapping(path = "/v1/jar/execution", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
     public ResponseEntity<String> executeJar(@ModelAttribute ExecuteRequestModel executeRequestModel) {
         try {
@@ -33,6 +34,7 @@ public class WorkerController {
                 return ResponseEntity.internalServerError().body("Upload directory does not exists");
             }
 
+//            todo: use for code execution
             File destinationFile = new File(uploadDir, executeRequestModel.fileName());
             executeRequestModel.jar().transferTo(destinationFile);
 //            executing jar
