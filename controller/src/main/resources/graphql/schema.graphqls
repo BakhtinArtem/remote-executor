@@ -1,0 +1,38 @@
+type Query {
+    graphById(id: ID): Graph
+}
+
+type Mutation {
+    createGraph(input: GraphInput): Graph!
+}
+
+input GraphInput {
+    name: String!
+    nodes: [NodeInput!]!
+    edges: [EdgeInput!]!
+}
+
+input NodeInput {
+    id: ID
+    filename: String!
+    image: String!
+    isRoot: Boolean!
+}
+
+input EdgeInput {
+    from: Int!
+    to: Int!
+}
+
+type Node {
+    id: ID
+    filename: String!
+    image: String!
+    isRoot: Boolean!
+}
+
+type Graph {
+    id: ID
+    name: String!
+    node: [Node]!
+}

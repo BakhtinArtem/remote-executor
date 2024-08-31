@@ -4,3 +4,4 @@ metadata:
   name: main-config-map
 data:
   jar_path: "/data/persistent-volume-300M"
+  postgres_external_port: "5432"

@@ -1,4 +1,4 @@
-package com.project.controller.models;
+package com.project.controller.model;
 
 public record RunJarTaskModel(String filename) {
 }

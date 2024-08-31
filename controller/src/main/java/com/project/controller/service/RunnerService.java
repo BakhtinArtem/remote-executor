@@ -1,6 +1,6 @@
-package com.project.controller;
+package com.project.controller.service;
 
-import com.project.controller.models.RunJarTaskModel;
+import com.project.controller.model.RunJarTaskModel;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
@@ -23,9 +23,9 @@ public class RunnerService {
 
     public void runTask(RunJarTaskModel runJarTaskModel, String jarsFilesPath) throws IOException {
         final ConfigBuilder configBuilder = new ConfigBuilder();
-//        if (args.length > 0) {
-//            configBuilder.withMasterUrl(args[0]);
-//        }
+//        todo: caching?
+//        todo: saving and running should be separated
+//        todo: graph processor full of this jobs
         try (KubernetesClient client = new KubernetesClientBuilder().withConfig(configBuilder.build()).build()) {
             final String namespace = "default";
             final Job job = new JobBuilder()
@@ -38,7 +38,6 @@ public class RunnerService {
                     .withNewSpec()
                         .withNewTemplate()
                             .withNewSpec()
-//                    fixme: account name is not working - role binding is used
                                 .withServiceAccountName("job-manager")
                                 .addNewContainer()
                                     .withName("pi")
@@ -51,14 +50,12 @@ public class RunnerService {
                     .endSpec()
                     .build();
 
-            logger.info("Creating job pi.");
-
-            client.batch().v1().jobs().inNamespace("default").resource(job).create();
-
-            // Get All pods created by the job
+            logger.info(String.format("Creating job for %s.", runJarTaskModel.filename()));
+//            creating job
+            client.batch().v1().jobs().inNamespace(namespace).resource(job).create();
+//            get all pods created by the job
             PodList podList = client.pods().inNamespace(namespace).withLabel("job-name", job.getMetadata().getName()).list();
-
-            // Wait for pod to complete
+//            we should save job until next usage
             client.pods().inNamespace(namespace).withName(podList.getItems().get(0).getMetadata().getName())
                     .waitUntilCondition(pod -> pod.getStatus().getPhase().equals("Succeeded"), 2, TimeUnit.MINUTES);
 

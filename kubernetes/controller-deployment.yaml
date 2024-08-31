@@ -16,8 +16,15 @@ spec:
         - image: aape2k/re-controller
           name: controller-image
           env:
+#            todo: get values from config map + secret
             - name: JAR_FILES_PATH
               value: "/jars"
+            - name: POSTGRES_EXTERNAL_PORT
+              value: "5432"
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              value: "postgres"
           volumeMounts:
             - mountPath: "/jars"
               name: jars-storage

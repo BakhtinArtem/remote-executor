@@ -1,4 +1,4 @@
-package com.project.controller.models;
+package com.project.controller.model;
 
 import org.springframework.web.multipart.MultipartFile;
 
