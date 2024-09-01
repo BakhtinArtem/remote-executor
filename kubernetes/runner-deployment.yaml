@@ -4,7 +4,8 @@ kind: Deployment
 metadata:
   name: runner-deployment
 spec:
-  replicas: 3
+#  fixme: test purposes
+  replicas: 1
   selector:
     matchLabels:
       app: runner
