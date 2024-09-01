@@ -1,5 +1,6 @@
 type Query {
     graphById(id: ID): Graph
+    executeGraph(graphId: Int): Execution!
 }
 
 type Mutation {
@@ -29,6 +30,20 @@ type Node {
     filename: String!
     image: String!
     isRoot: Boolean!
+}
+
+enum ExecutionStatus {
+    IDLE,
+    RUNNING,
+    ERROR,
+    FINISHED
+}
+
+type Execution {
+    id: ID
+    startTime: String!
+    endTime: String!
+    status: ExecutionStatus!
 }
 
 type Graph {

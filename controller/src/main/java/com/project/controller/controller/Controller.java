@@ -1,5 +1,6 @@
 package com.project.controller.controller;
 
+import com.project.controller.entity.Execution;
 import com.project.controller.entity.Graph;
 import com.project.controller.entity.Node;
 import com.project.controller.model.GraphInput;
@@ -75,16 +76,20 @@ public class Controller {
         return ResponseEntity.ok().build();
     }
 
+//    todo test method: delete method
     @PostMapping(path = "v1/jar/run")
     public ResponseEntity<?> runJarTask(@RequestBody RunJarTaskModel runJarTaskModel) {
-        try {
+//        try {
 //            this should be configurable (image, input parameters etc.)
-            runnerService.runTask(runJarTaskModel, JAR_FILES_PATH);
+//            runnerService.runTask(runJarTaskModel, JAR_FILES_PATH);
             return ResponseEntity.ok().build();
-        } catch (IOException ex) {
-            return ResponseEntity.internalServerError().build();
-        }
+//        } catch (IOException ex) {
+//            return ResponseEntity.internalServerError().build();
+//        }
     }
+
+    @QueryMapping
+    public Execution executeGraph(@Argument Long graphId) { return graphService.executeGraph(graphId); }
 
     @QueryMapping
     public Graph graphById(@Argument String id) {

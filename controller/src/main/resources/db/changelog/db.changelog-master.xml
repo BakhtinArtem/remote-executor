@@ -57,6 +57,33 @@
     </changeSet>
 
     <changeSet id="6" author="admin">
+        <createSequence
+                sequenceName="execution_id_seq"
+                startValue="1"
+                incrementBy="1" />
+    </changeSet>
+
+    <changeSet id="7" author="admin">
+        <createTable tableName="execution">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="start_time" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="end_time" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="graph_id" type="BIGINT">
+                <constraints nullable="true" foreignKeyName="fk_execution_graph" references="graph(id)"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="8" author="admin">
         <createTable tableName="edge">
             <column name="id" type="BIGINT">
                 <constraints primaryKey="true" nullable="false"/>
