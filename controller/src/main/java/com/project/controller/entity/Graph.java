@@ -7,10 +7,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+//  graph with nodes, which include outgoing nodes and incoming nodes
 @NamedEntityGraphs({
         @NamedEntityGraph(name = "graph-with-nodes",
                 attributeNodes = {  @NamedAttributeNode(value = "nodes", subgraph = "nodes-with-edges") }, subgraphs = {
-            @NamedSubgraph(name = "nodes-with-edges", attributeNodes = { @NamedAttributeNode(value = "edges") })
+            @NamedSubgraph(name = "nodes-with-edges", attributeNodes = {
+                    @NamedAttributeNode(value = "incomingNodes"),
+                    @NamedAttributeNode(value = "outgoingNodes") })
         }),
 })
 @Table(name = "graph")

@@ -3,7 +3,8 @@ package com.project.controller.entity;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "node")
@@ -29,7 +30,27 @@ public class Node implements Serializable {
     @Column(name = "is_root",nullable = false)
     private Boolean isRoot;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "from_node_id", referencedColumnName = "id")
-    private List<Edge> edges;
+//    setter manual definition due to lombok incorrect generating of this method for HashSet
+    @lombok.Setter(lombok.AccessLevel.NONE)
+    @ManyToMany
+    @JoinTable(name = "edge", joinColumns = @JoinColumn(name = "from_node_id"),
+            inverseJoinColumns = @JoinColumn(name = "to_node_id")
+    )
+    private Set<Node> incomingNodes = new HashSet<>();
+
+//    same
+    @lombok.Setter(lombok.AccessLevel.NONE)
+    @ManyToMany
+    @JoinTable(name = "edge", joinColumns = @JoinColumn(name = "to_node_id"),
+            inverseJoinColumns = @JoinColumn(name = "from_node_id")
+    )
+    private Set<Node> outgoingNodes = new HashSet<>();
+
+    public void setIncomingNodes(Set<Node> incomingNodes) {
+        this.incomingNodes = incomingNodes;
+    }
+
+    public void setOutgoingNodes(Set<Node> outgoingNodes) {
+        this.outgoingNodes = outgoingNodes;
+    }
 }

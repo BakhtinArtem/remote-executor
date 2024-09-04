@@ -3,14 +3,21 @@ package com.project.controller.service;
 import com.project.controller.entity.Execution;
 import com.project.controller.entity.Graph;
 import com.project.controller.entity.Node;
+import com.project.controller.event.NodeExecutedEvent;
 import com.project.controller.model.ExecutionStatusEnum;
 import com.project.controller.model.GraphInput;
 import com.project.controller.repository.ExecutionRepository;
 import com.project.controller.repository.GraphRepository;
+import org.apache.commons.lang.NotImplementedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,20 +47,31 @@ public class GraphService {
     private RunnerService runnerService;
 
     @Autowired
+    private ExecutionService executionService;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
+
+    @Autowired
     @Lazy
     private GraphService self;
+
+    private final Logger logger = LoggerFactory.getLogger(GraphService.class);
 
 //    each execution associated with map of graph nodes with statuses
     private final Map<Long, Map<Long, ExecutionStatusEnum>> executionIdToRunningNodesMap = new ConcurrentHashMap<>();
 
+    @Transactional
     public List<Graph> getGraphs(Pageable pageable) {
         return graphRepository.findAll(pageable).toList();
     }
 
+    @Transactional
     public Graph graphById(Long id) {
         return graphRepository.findById(id).orElseThrow();
     }
 
+    @Transactional
     public List<Node> getGraphNodes(Long id) {
         return graphById(id).getNodes();
     }
@@ -70,16 +88,11 @@ public class GraphService {
         return newGraph;
     }
 
+    @Transactional
     public Execution executeGraph(Long graphId) {
         final var graph = self.graphById(graphId);
 
-        final var execution = new Execution();
-        execution.setStatus(ExecutionStatusEnum.RUNNING);
-        execution.setGraph(graph);
-        execution.setStartTime(LocalDateTime.now());
-//        fixme
-        execution.setEndTime(LocalDateTime.now());
-        executionRepository.save(execution);
+        final var execution = executionService.newExecution(graph);
 
         final var nodeIdToStatuses = new ConcurrentHashMap<Long, ExecutionStatusEnum>();
         final Node[] root = new Node[1];
@@ -93,10 +106,51 @@ public class GraphService {
             }
         });
         executionIdToRunningNodesMap.put(execution.getId(), nodeIdToStatuses);
-
-//        listen for event
+//        async call (execution starts with the root)
         runnerService.runTask(execution, root[0]);
-
         return execution;
+    }
+
+//    @Async(value = "threadPoolTaskExecutor")
+    @EventListener()
+    public void handleNodeExecutedEvent(NodeExecutedEvent nodeExecutedEvent) {
+//        todo: lock graph editing if job is running
+        final var nodesIdToStatus = executionIdToRunningNodesMap.get(nodeExecutedEvent.execution().getId());
+        nodesIdToStatus.put(nodeExecutedEvent.node().getId(), nodeExecutedEvent.executionStatusEnum());
+//        failed node execution fails graph execution
+        if (nodeExecutedEvent.executionStatusEnum().equals(ExecutionStatusEnum.FAILED)) {
+//            todo
+            throw new NotImplementedException("Failed node not handled");
+        }
+//        finish execution if last node (no outgoing nodes exist) executed and others nodes executed as well
+        if (nodeExecutedEvent.node().getOutgoingNodes().isEmpty()) {
+            boolean finished = true;
+            for (final Map.Entry<Long, ExecutionStatusEnum> entry : nodesIdToStatus.entrySet()) {
+                if (!entry.getValue().equals(ExecutionStatusEnum.SUCCEEDED)) {
+                    finished = false;
+                    break;
+                }
+            }
+            if (finished) {
+                executionService.finishExecution(nodeExecutedEvent.execution(), nodeExecutedEvent.executionStatusEnum());
+                return;
+            }
+        }
+
+//        run tasks for all outgoing nodes
+        for (final var node : nodeExecutedEvent.node().getOutgoingNodes()) {
+//        node can be executed if all previous nodes are executed successfully
+            boolean canBeExecuted = true;
+            for (final var incomingNode : node.getIncomingNodes()) {
+                if (!nodesIdToStatus.get(incomingNode.getId()).equals(ExecutionStatusEnum.SUCCEEDED)) {
+                    canBeExecuted = false;
+                    break;
+                }
+            }
+
+            if (canBeExecuted) {
+                runnerService.runTask(nodeExecutedEvent.execution(), node);
+            }
+        }
     }
 }

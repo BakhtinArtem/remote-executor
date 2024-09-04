@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -28,7 +29,8 @@ public class NodeService {
             newNode.setFilename(node.filename());
             newNode.setImage(node.image());
             newNode.setIsRoot(node.isRoot());
-            newNode.setEdges(List.of());
+            newNode.setIncomingNodes(new HashSet<>());
+            newNode.setOutgoingNodes(new HashSet<>());
             newNode.setGraphId(graphId);
             nodeRepository.save(newNode);
             map.put(node.id(), newNode.getId());
