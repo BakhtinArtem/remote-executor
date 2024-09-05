@@ -1,35 +1,66 @@
 package com.project.controller.service;
 
 import com.project.controller.entity.Execution;
+import com.project.controller.entity.Graph;
 import com.project.controller.entity.Node;
-import com.project.controller.event.NodeExecutedEvent;
 import com.project.controller.model.ExecutionStatusEnum;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
 import io.fabric8.kubernetes.client.*;
 import io.fabric8.kubernetes.client.ConfigBuilder;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 @Service
+@Slf4j
 public class RunnerService {
 
     @Value("${JAR_FILES_PATH}")
     private String JAR_FILES_PATH;
 
     @Autowired
-    private ApplicationEventPublisher eventPublisher;
-    private final Logger logger = LoggerFactory.getLogger(RunnerService.class);
+    private ExecutionService executionService;
+
+    @Lazy
+    @Autowired
+    private RunnerService self;
+
+    //    each execution associated with map of graph nodes with statuses
+    private final Map<Long, Map<Long, ExecutionStatusEnum>> executionIdToRunningNodesMap = new ConcurrentHashMap<>();
+
+
+    @Async(value = "threadPoolTaskExecutor")
+    public void executeGraph(Graph graph, Execution execution) {
+        final var nodeIdToStatuses = new ConcurrentHashMap<Long, ExecutionStatusEnum>();
+        final Node[] root = new Node[1];
+        graph.getNodes().forEach(node -> {
+//            root node is automatically scheduled
+            if (node.getIsRoot()) {
+                root[0] = node;
+                nodeIdToStatuses.put(node.getId(), ExecutionStatusEnum.RUNNING);
+            } else {
+                nodeIdToStatuses.put(node.getId(), ExecutionStatusEnum.IDLE);
+            }
+        });
+        executionIdToRunningNodesMap.put(execution.getId(), nodeIdToStatuses);
+//        async call (execution starts with the root)
+        self.executeNode(execution, root[0]);
+
+    }
 
     /**
      * Run JAR file as kubernetes job
@@ -38,7 +69,8 @@ public class RunnerService {
      * @return 0 if job successfully finished and 0 otherwise
      */
     @Async(value = "threadPoolTaskExecutor")
-    public CompletableFuture<ExecutionStatusEnum> runTask(Execution execution, Node node) {
+    public CompletableFuture<ExecutionStatusEnum> executeNode(Execution execution, Node node) {
+        log.debug("Execution {}: execution of {} node started", execution.getId(), node.getId());
         final ConfigBuilder configBuilder = new ConfigBuilder();
         final String namespace = "default";
         final String name = execution.getId() + "-" + node.getId();
@@ -80,7 +112,7 @@ public class RunnerService {
                     .endSpec()
                     .build();
 
-            logger.info(String.format("Creating job for %s.", node.getFilename()));
+            log.debug("Creating job for {}.", node.getFilename());
 //            creating the job
             client.batch().v1().jobs().inNamespace(namespace).resource(job).create();
 //            waiting for the job readiness (1 minute max)
@@ -94,7 +126,7 @@ public class RunnerService {
             isSucceeded = resultJob.getStatus().getSucceeded() != null && resultJob.getStatus().getSucceeded() == 1 ?
                     ExecutionStatusEnum.SUCCEEDED : ExecutionStatusEnum.FAILED;
         } catch (KubernetesClientException e) {
-            logger.error("Unable to create job", e);
+            log.error("Unable to create job", e);
         } finally {
 //            cleaning resources by deleting recently created job
             try (KubernetesClient client = new KubernetesClientBuilder().withConfig(configBuilder.build()).build()) {
@@ -103,7 +135,7 @@ public class RunnerService {
                 client.batch().v1().jobs().inNamespace(namespace).withName(name).watch(new Watcher<Job>() {
                     @Override
                     public void eventReceived(Action action, Job resource) {
-                        logger.warn("Job " + name + " was " + action);
+                        log.warn("Job {} was {}", name, action);
                         switch (action) {
                             case DELETED -> deleteLatch.countDown();
                             default -> {}
@@ -118,16 +150,68 @@ public class RunnerService {
     //            waiting for deletion
                 final var isDelete = deleteLatch.await(1, TimeUnit.SECONDS);
                 final var isWatchClosed = closeLatch.await(1, TimeUnit.MINUTES);
-                logger.info("Job is" + (isDelete ? " " : " NOT ") + "deleted and watch is" + (isWatchClosed ? " " : " NOT ") + "closed");
+                log.debug("Job is" + (isDelete ? " " : " NOT ") + "deleted and watch is" + (isWatchClosed ? " " : " NOT ") + "closed");
             } catch (InterruptedException e) {
-                logger.error("Unable to delete " + name + " resource");
+                log.error("Unable to delete {} resource", name);
             }
         }
-//        todo: we can just call without event pusblishing?
-//        publish event about executed node
-        eventPublisher.publishEvent(new NodeExecutedEvent(execution, node, isSucceeded));
-        logger.info("Job " + name + " " + isSucceeded);
+//        async call to node post execution handle function
+        self.handleNodeExecution(execution, node, isSucceeded);
+        log.debug("Job " + name + " " + isSucceeded);
         return CompletableFuture.completedFuture(isSucceeded);
     }
 
+    @Async(value = "threadPoolTaskExecutor")
+    public void handleNodeExecution(Execution execution, Node node, ExecutionStatusEnum executionStatusEnum) {
+        log.debug("Execution {}: handle {} node execution", execution.getId(), node.getId());
+//        fixme: remove
+        log.debug("Node incoming nodes - {} and outgoing nodes - {}", node.getIncomingNodes().size(), node.getOutgoingNodes().size());
+        final var nodesIdToStatus = executionIdToRunningNodesMap.get(execution.getId());
+        nodesIdToStatus.put(node.getId(), executionStatusEnum);
+//        failed node execution fails graph execution
+        if (executionStatusEnum.equals(ExecutionStatusEnum.FAILED)) {
+            log.debug("Execution {}: failed execution for {} node", execution.getId(), node.getId());
+            execution.setEndTime(LocalDateTime.now());
+            execution.setStatus(ExecutionStatusEnum.FAILED);
+            executionService.updateExecution(execution);
+            return;
+        }
+//        finish execution if last node (no outgoing nodes exist) executed and others nodes executed as well
+        if (node.getOutgoingNodes().isEmpty()) {
+            log.debug("Execution {}: checking nodes statuses to finish this execution ...", execution.getId());
+            boolean finished = true;
+            for (final Map.Entry<Long, ExecutionStatusEnum> entry : nodesIdToStatus.entrySet()) {
+                log.debug("Execution {}: {} node has {} status", execution.getId(), entry.getKey(), entry.getValue());
+                if (!entry.getValue().equals(ExecutionStatusEnum.SUCCEEDED)) {
+                    finished = false;
+                    break;
+                }
+            }
+            if (finished) {
+                log.debug("Execution {}: finished", execution.getId());
+                executionService.finishExecution(execution, executionStatusEnum);
+                return;
+            }
+        }
+
+//        run tasks for all outgoing nodes
+        for (final var outgoingNode : node.getOutgoingNodes()) {
+            log.debug("Execution {}: check outgoing nodes for {} node ... ", execution.getId(), node.getId());
+//        node can be executed if all previous nodes are executed successfully
+            boolean canBeExecuted = true;
+            for (final var incomingNode : outgoingNode.getIncomingNodes()) {
+                log.debug("Execution {}: Incoming {} node for outgoing {} node has {} status",
+                        execution.getId(), incomingNode.getId(), outgoingNode.getId(), nodesIdToStatus.get(incomingNode.getId()));
+                if (!nodesIdToStatus.get(incomingNode.getId()).equals(ExecutionStatusEnum.SUCCEEDED)) {
+                    canBeExecuted = false;
+                    break;
+                }
+            }
+
+            if (canBeExecuted) {
+                log.debug("Execution {}: start executing {} node", execution.getId(), node.getId());
+                self.executeNode(execution, outgoingNode);
+            }
+        }
+    }
 }

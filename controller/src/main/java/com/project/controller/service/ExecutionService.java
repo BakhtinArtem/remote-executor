@@ -22,8 +22,13 @@ public class ExecutionService {
         newExecution.setStatus(ExecutionStatusEnum.RUNNING);
         newExecution.setGraph(graph);
         newExecution.setStartTime(LocalDateTime.now());
+//        todo: fixme
         newExecution.setEndTime(LocalDateTime.now());
         return executionRepository.save(newExecution);
+    }
+
+    public Execution updateExecution(Execution execution) {
+        return executionRepository.save(execution);
     }
 
     public Execution finishExecution(Execution execution, ExecutionStatusEnum executionStatusEnum) {

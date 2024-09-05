@@ -36,7 +36,7 @@ public class Node implements Serializable {
     @JoinTable(name = "edge", joinColumns = @JoinColumn(name = "from_node_id"),
             inverseJoinColumns = @JoinColumn(name = "to_node_id")
     )
-    private Set<Node> incomingNodes = new HashSet<>();
+    private Set<Node> outgoingNodes = new HashSet<>();
 
 //    same
     @lombok.Setter(lombok.AccessLevel.NONE)
@@ -44,7 +44,7 @@ public class Node implements Serializable {
     @JoinTable(name = "edge", joinColumns = @JoinColumn(name = "to_node_id"),
             inverseJoinColumns = @JoinColumn(name = "from_node_id")
     )
-    private Set<Node> outgoingNodes = new HashSet<>();
+    private Set<Node> incomingNodes = new HashSet<>();
 
     public void setIncomingNodes(Set<Node> incomingNodes) {
         this.incomingNodes = incomingNodes;
