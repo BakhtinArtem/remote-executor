@@ -28,7 +28,8 @@ public class GraphUtil {
 
     private static Optional<Set<Long>> dfs(GraphInput graphInput, NodeInput nodeInput, Set<Long> idsInPath) {
         idsInPath.add(nodeInput.id());
-        for (final var nodeInputDescendant : graphInput.getSuccessor(nodeInput)) {
+        for (final var nodeInputDescendant : graphInput.getSuccessor(nodeInput, true)) {
+//            fixme: bidirection
             if (idsInPath.contains(nodeInputDescendant.id())) {
                 return Optional.of(idsInPath);
             }
@@ -44,7 +45,7 @@ public class GraphUtil {
         final var resultNodes = new ArrayList<Long>();
         while (!queue.isEmpty()) {
             final var currNode = queue.remove();
-            for (final var successorNode : graphInput.getSuccessor(currNode)) {
+            for (final var successorNode : graphInput.getSuccessor(currNode, false)) {
                 if (!resultNodes.contains(successorNode.id())) {
                     queue.add(successorNode);
                     resultNodes.add(successorNode.id());

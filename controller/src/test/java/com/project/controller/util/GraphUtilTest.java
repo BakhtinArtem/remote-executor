@@ -35,12 +35,23 @@ public class GraphUtilTest {
     }
 
     @Test
-    public void isMultiComponent_With2Component() {
+    public void isMultiComponent_WithTwoComponent() {
         final var nodes = List.of(new NodeInput(1L, "", "", true),
                 new NodeInput(2L, "", "", false),
                 new NodeInput(3L, "", "", false),
                 new NodeInput(4L, "", "", false));
         final var edges = List.of(new EdgeInput(1L,2L), new EdgeInput(3L, 4L));
+        final var graphInput = new GraphInput("", nodes, edges);
+        assertTrue(GraphUtil.isMultiComponent(graphInput));
+    }
+
+    @Test
+    public void isMultiComponent_WithOneComponent() {
+        final var nodes = List.of(new NodeInput(1L, "", "", true),
+                new NodeInput(2L, "", "", false),
+                new NodeInput(3L, "", "", false),
+                new NodeInput(4L, "", "", false));
+        final var edges = List.of(new EdgeInput(1L,2L), new EdgeInput(2L, 4L), new EdgeInput(3L, 4L));
         final var graphInput = new GraphInput("", nodes, edges);
         assertTrue(GraphUtil.isMultiComponent(graphInput));
     }
