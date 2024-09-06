@@ -3,6 +3,8 @@ package com.project.controller.controller;
 import com.project.controller.entity.Execution;
 import com.project.controller.entity.Graph;
 import com.project.controller.entity.Node;
+import com.project.controller.exception.CycleDetectedException;
+import com.project.controller.exception.MultiComponentDetectedException;
 import com.project.controller.model.GraphInput;
 import com.project.controller.model.RunJarTaskModel;
 import com.project.controller.model.SaveRequestModel;
@@ -97,7 +99,7 @@ public class Controller {
     }
 
     @MutationMapping
-    public Graph createGraph(@Argument GraphInput input) {
+    public Graph createGraph(@Argument GraphInput input) throws CycleDetectedException, MultiComponentDetectedException {
         return graphService.createGraph(input);
     }
 

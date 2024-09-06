@@ -39,8 +39,11 @@ public class RunnerService {
     @Autowired
     private RunnerService self;
 
-    //    each execution associated with map of graph nodes with statuses
-    private final Map<Long, Map<Long, ExecutionStatusEnum>> executionIdToRunningNodesMap = new ConcurrentHashMap<>();
+//    each execution associated with map of graph nodes with statuses
+    private final Map<Long, ConcurrentHashMap<Long, ExecutionStatusEnum>> executionIdToRunningNodesMap =
+        new ConcurrentHashMap<>();
+
+    private final Object monitor = new Object();
 
 
     @Async(value = "threadPoolTaskExecutor")
@@ -64,9 +67,9 @@ public class RunnerService {
 
     /**
      * Run JAR file as kubernetes job
-     * @param execution - current execution
-     * @param node - node to execute
-     * @return 0 if job successfully finished and 0 otherwise
+     * @param execution current execution
+     * @param node node to execute
+     * @return status in form of ExecutionStatusEnum
      */
     @Async(value = "threadPoolTaskExecutor")
     public CompletableFuture<ExecutionStatusEnum> executeNode(Execution execution, Node node) {
@@ -176,21 +179,24 @@ public class RunnerService {
             executionService.updateExecution(execution);
             return;
         }
+
 //        finish execution if last node (no outgoing nodes exist) executed and others nodes executed as well
-        if (node.getOutgoingNodes().isEmpty()) {
-            log.debug("Execution {}: checking nodes statuses to finish this execution ...", execution.getId());
-            boolean finished = true;
-            for (final Map.Entry<Long, ExecutionStatusEnum> entry : nodesIdToStatus.entrySet()) {
-                log.debug("Execution {}: {} node has {} status", execution.getId(), entry.getKey(), entry.getValue());
-                if (!entry.getValue().equals(ExecutionStatusEnum.SUCCEEDED)) {
-                    finished = false;
-                    break;
+        synchronized (monitor) {
+            if (node.getOutgoingNodes().isEmpty()) {
+                log.debug("Execution {}: checking nodes statuses to finish this execution ...", execution.getId());
+                boolean finished = true;
+                for (final Map.Entry<Long, ExecutionStatusEnum> entry : nodesIdToStatus.entrySet()) {
+                    log.debug("Execution {}: {} node has {} status", execution.getId(), entry.getKey(), entry.getValue());
+                    if (!entry.getValue().equals(ExecutionStatusEnum.SUCCEEDED)) {
+                        finished = false;
+                        break;
+                    }
                 }
-            }
-            if (finished) {
-                log.debug("Execution {}: finished", execution.getId());
-                executionService.finishExecution(execution, executionStatusEnum);
-                return;
+                if (finished) {
+                    log.debug("Execution {}: finished", execution.getId());
+                    executionService.finishExecution(execution, executionStatusEnum);
+                    return;
+                }
             }
         }
 

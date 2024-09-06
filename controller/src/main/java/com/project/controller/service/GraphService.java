@@ -3,8 +3,11 @@ package com.project.controller.service;
 import com.project.controller.entity.Execution;
 import com.project.controller.entity.Graph;
 import com.project.controller.entity.Node;
+import com.project.controller.exception.CycleDetectedException;
+import com.project.controller.exception.MultiComponentDetectedException;
 import com.project.controller.model.GraphInput;
 import com.project.controller.repository.GraphRepository;
+import com.project.controller.util.GraphUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,8 +60,17 @@ public class GraphService {
     }
 
     @Transactional(isolation = Isolation.READ_UNCOMMITTED)  //  to read uncommitted nodes during edge insertion
-    public Graph createGraph(GraphInput graphInput) {
-//        todo: validate graph
+    public Graph createGraph(GraphInput graphInput) throws CycleDetectedException, MultiComponentDetectedException {
+//        validate graph - graph should have one component and be acyclic
+        final var cycle = GraphUtil.findCycle(graphInput);
+        if (cycle.isPresent()) {
+            throw new CycleDetectedException(cycle.get());
+        }
+
+        if (GraphUtil.isMultiComponent(graphInput)) {
+            throw new MultiComponentDetectedException();
+        }
+
         var newGraph = new Graph();
         newGraph.setName(graphInput.name());
         newGraph.setNodes(List.of());
