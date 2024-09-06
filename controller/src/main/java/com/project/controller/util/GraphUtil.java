@@ -43,11 +43,11 @@ public class GraphUtil {
         queue.add(nodeInput);
         final var resultNodes = new ArrayList<Long>();
         while (!queue.isEmpty()) {
-            final var currNode = queue.peek();
-            for (final var successorNode : graphInput.getSuccessor(nodeInput)) {
+            final var currNode = queue.remove();
+            for (final var successorNode : graphInput.getSuccessor(currNode)) {
                 if (!resultNodes.contains(successorNode.id())) {
                     queue.add(successorNode);
-                    resultNodes.add(nodeInput.id());
+                    resultNodes.add(successorNode.id());
                 }
             }
         }
