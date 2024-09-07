@@ -29,7 +29,6 @@ public class GraphUtil {
     private static Optional<Set<Long>> dfs(GraphInput graphInput, NodeInput nodeInput, Set<Long> idsInPath) {
         idsInPath.add(nodeInput.id());
         for (final var nodeInputDescendant : graphInput.getSuccessor(nodeInput, true)) {
-//            fixme: bidirection
             if (idsInPath.contains(nodeInputDescendant.id())) {
                 return Optional.of(idsInPath);
             }

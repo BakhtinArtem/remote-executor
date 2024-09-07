@@ -7,6 +7,6 @@ public record GraphInput(String name, List<NodeInput> nodes, List<EdgeInput> edg
     public List<NodeInput> getSuccessor(NodeInput nodeInput, boolean isDirected) {
         return nodes.stream().filter(nodeInputDescendant -> edges.stream().anyMatch(edgeInput ->
                 edgeInput.from().equals(nodeInput.id()) && edgeInput.to().equals(nodeInputDescendant.id()) ||
-                        (isDirected && edgeInput.from().equals(nodeInputDescendant.id()) && edgeInput.to().equals(nodeInput.id())) )).toList();
+                        (!isDirected && edgeInput.from().equals(nodeInputDescendant.id()) && edgeInput.to().equals(nodeInput.id())) )).toList();
     }
 }

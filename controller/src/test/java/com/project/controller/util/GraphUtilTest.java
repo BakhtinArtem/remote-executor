@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
@@ -51,8 +52,8 @@ public class GraphUtilTest {
                 new NodeInput(2L, "", "", false),
                 new NodeInput(3L, "", "", false),
                 new NodeInput(4L, "", "", false));
-        final var edges = List.of(new EdgeInput(1L,2L), new EdgeInput(2L, 4L), new EdgeInput(3L, 4L));
+        final var edges = List.of(new EdgeInput(1L,2L), new EdgeInput(2L, 3L), new EdgeInput(3L, 4L));
         final var graphInput = new GraphInput("", nodes, edges);
-        assertTrue(GraphUtil.isMultiComponent(graphInput));
+        assertFalse(GraphUtil.isMultiComponent(graphInput));
     }
 }
