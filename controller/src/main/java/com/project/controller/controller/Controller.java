@@ -12,8 +12,7 @@ import com.project.controller.service.EdgeService;
 import com.project.controller.service.GraphService;
 import com.project.controller.service.NodeService;
 import com.project.controller.service.RunnerService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
@@ -29,31 +28,21 @@ import java.io.IOException;
 import java.util.List;
 
 @RestController
+@Slf4j
 public class Controller {
-
-    private final Logger logger = LoggerFactory.getLogger(Controller.class);
 
     @Value("${JAR_FILES_PATH}")
     private String JAR_FILES_PATH;
 
     @Autowired
-    private RunnerService runnerService;
-
-    @Autowired
     private GraphService graphService;
-
-    @Autowired
-    private NodeService nodeService;
-
-    @Autowired
-    private EdgeService edgeService;
 
     @GetMapping(path = "/v1/jar")
     @ResponseBody
     public ResponseEntity<String[]> getSavedFiles() {
         File jarsDir = new File(JAR_FILES_PATH);
         if (!jarsDir.isDirectory()) {
-            logger.error("Given path is not a directory");
+            log.error("Given path is not a directory");
             return ResponseEntity.internalServerError().build();
         }
         return ResponseEntity.ok(jarsDir.list());
@@ -63,7 +52,7 @@ public class Controller {
     public ResponseEntity<String> saveJarRequest(@ModelAttribute SaveRequestModel saveRequestModel) {
         final File uploadDir = new File(JAR_FILES_PATH);
         if (!uploadDir.exists()) {
-            logger.error("Upload directory does not exists");
+            log.error("Upload directory does not exists");
             return ResponseEntity.internalServerError().build();
         }
 
@@ -71,10 +60,10 @@ public class Controller {
         try {
             saveRequestModel.jar().transferTo(destinationFile);
         } catch (IOException e) {
-            logger.error("Error during uploading", e);
+            log.error("Error during uploading", e);
             return ResponseEntity.internalServerError().build();
         }
-        logger.info("File " + destinationFile.getName() + " correctly saved to " + destinationFile.getPath());
+        log.info("File " + destinationFile.getName() + " correctly saved to " + destinationFile.getPath());
         return ResponseEntity.ok().build();
     }
 

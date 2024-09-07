@@ -10,8 +10,6 @@ import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
 import io.fabric8.kubernetes.client.*;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
@@ -135,7 +133,7 @@ public class RunnerService {
             try (KubernetesClient client = new KubernetesClientBuilder().withConfig(configBuilder.build()).build()) {
                 final CountDownLatch deleteLatch = new CountDownLatch(1);
                 final CountDownLatch closeLatch = new CountDownLatch(1);
-                client.batch().v1().jobs().inNamespace(namespace).withName(name).watch(new Watcher<Job>() {
+                client.batch().v1().jobs().inNamespace(namespace).withName(name).watch(new Watcher<>() {
                     @Override
                     public void eventReceived(Action action, Job resource) {
                         log.warn("Job {} was {}", name, action);
