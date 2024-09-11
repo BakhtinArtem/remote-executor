@@ -24,15 +24,16 @@ public class Node implements Serializable {
     @Column(nullable = false)
     private String image;
 
-    @Column(name = "graph_id", nullable = false)
-    private Long graphId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "graph_id", referencedColumnName = "id")
+    private Graph graph;
 
     @Column(name = "is_root",nullable = false)
     private Boolean isRoot;
 
 //    setter manual definition due to lombok incorrect generating of this method for HashSet
     @lombok.Setter(lombok.AccessLevel.NONE)
-    @ManyToMany
+    @ManyToMany()
     @JoinTable(name = "edge", joinColumns = @JoinColumn(name = "from_node_id"),
             inverseJoinColumns = @JoinColumn(name = "to_node_id")
     )

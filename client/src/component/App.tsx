@@ -1,12 +1,14 @@
 import {Outlet, useNavigate, useOutletContext} from "react-router-dom";
 import {TabMenu} from "primereact/tabmenu";
-import {useState} from "react";
+import {MutableRefObject, useRef, useState} from "react";
+import {Toast} from "primereact/toast";
 
-type ContextType = [ number | undefined, (number) => {} ];
+type ContextType = [ number | undefined, (number) => {}, MutableRefObject<Toast> ];
 
 export default function App() {
     const navigate = useNavigate();
     const [graphId, setGraphId] = useState<number>();
+    const toast = useRef(null);
     const items = [
         { label: 'Graph List', icon: 'pi pi-home', command: () => navigate('/list')  },
         { label: 'Graph', icon: 'pi pi-sitemap ', command: () => navigate('/editor') },
@@ -14,8 +16,9 @@ export default function App() {
 
     return (
         <>
+            <Toast ref={toast} />
             <TabMenu model={items} />
-            <Outlet context={ [graphId, setGraphId] }/>
+            <Outlet context={ [graphId, setGraphId, toast] }/>
         </>
     )
 }

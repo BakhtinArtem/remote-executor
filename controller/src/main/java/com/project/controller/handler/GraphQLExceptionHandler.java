@@ -18,7 +18,7 @@ public class GraphQLExceptionHandler extends DataFetcherExceptionResolverAdapter
 
     @Override
     protected GraphQLError resolveToSingleError(Throwable ex, DataFetchingEnvironment env) {
-//        todo: two error returning
+//        todo: two errors returning
         log.debug("Handle error: {}", ex.toString());
         return switch (ex) {
             case CycleDetectedException cycleEx -> buildCustomMessage(ex, ErrorType.ValidationError);

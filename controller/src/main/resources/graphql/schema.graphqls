@@ -1,10 +1,12 @@
 type Query {
+    allGraphs: [Graph]!
     graphById(id: ID): Graph
     executeGraph(graphId: Int): Execution!
 }
 
 type Mutation {
     createGraph(input: GraphInput): Graph!
+    deleteGraph(graphId: ID): ID
 }
 
 input GraphInput {
@@ -21,6 +23,7 @@ input NodeInput {
 }
 
 input EdgeInput {
+    id: ID
     from: Int!
     to: Int!
 }
@@ -30,6 +33,12 @@ type Node {
     filename: String!
     image: String!
     isRoot: Boolean!
+}
+
+type Edge {
+    id: ID
+    fromNode: Node!
+    toNode: Node!
 }
 
 enum ExecutionStatus {
@@ -49,5 +58,6 @@ type Execution {
 type Graph {
     id: ID
     name: String!
-    node: [Node]!
+    nodes: [Node]!
+    edges: [Edge]!
 }

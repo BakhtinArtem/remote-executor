@@ -1,6 +1,7 @@
 package com.project.controller.service;
 
 import com.project.controller.entity.Edge;
+import com.project.controller.entity.Node;
 import com.project.controller.model.EdgeInput;
 import com.project.controller.repository.EdgeRepository;
 import com.project.controller.repository.NodeRepository;
@@ -33,5 +34,10 @@ public class EdgeService {
             return newEdge;
         }).toList();
         edgeRepository.saveAll(edges);
+    }
+
+    @Transactional
+    public Edge getEdgesForNode(Node node) {
+        return edgeRepository.findByFromNode(node).orElse(null);
     }
 }

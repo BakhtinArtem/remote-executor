@@ -1,5 +1,6 @@
 package com.project.controller.controller;
 
+import com.project.controller.entity.Edge;
 import com.project.controller.entity.Execution;
 import com.project.controller.entity.Graph;
 import com.project.controller.entity.Node;
@@ -8,13 +9,11 @@ import com.project.controller.exception.MultiComponentDetectedException;
 import com.project.controller.model.GraphInput;
 import com.project.controller.model.RunJarTaskModel;
 import com.project.controller.model.SaveRequestModel;
-import com.project.controller.service.EdgeService;
 import com.project.controller.service.GraphService;
-import com.project.controller.service.NodeService;
-import com.project.controller.service.RunnerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.graphql.data.method.annotation.Argument;
@@ -87,13 +86,26 @@ public class Controller {
         return graphService.graphById(Long.valueOf(id));
     }
 
+    @QueryMapping
+    public List<Graph> allGraphs() { return graphService.getGraphs(Pageable.unpaged()); }
+
     @MutationMapping
     public Graph createGraph(@Argument GraphInput input) throws CycleDetectedException, MultiComponentDetectedException {
         return graphService.createGraph(input);
     }
 
+    @MutationMapping
+    public Long deleteGraph(@Argument Long graphId) {
+        return graphService.deleteGraph(graphId);
+    }
+
     @SchemaMapping
-    public List<Node> node(Graph graph) {
+    public List<Node> nodes(Graph graph) {
         return graphService.getGraphNodes(graph.getId());
+    }
+
+    @SchemaMapping
+    public List<Edge> edges(Graph graph) {
+        return graphService.getGraphEdges(graph.getId());
     }
 }

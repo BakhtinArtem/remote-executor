@@ -12,4 +12,6 @@ public interface GraphRepository extends PagingAndSortingRepository<Graph, Long>
 
     @EntityGraph(value = "graph-with-nodes", type = EntityGraph.EntityGraphType.LOAD)
     Optional<Graph> findById(Long id);
+
+    Optional<Long> deleteGraphById(Long id);
 }

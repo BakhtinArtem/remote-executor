@@ -1,5 +1,6 @@
 package com.project.controller.service;
 
+import com.project.controller.entity.Graph;
 import com.project.controller.entity.Node;
 import com.project.controller.model.NodeInput;
 import com.project.controller.repository.NodeRepository;
@@ -21,7 +22,7 @@ public class NodeService {
     protected NodeRepository nodeRepository;
 
     @Transactional(propagation = Propagation.REQUIRED)
-    public Map<Long, Long> createNodesWithMap(List<NodeInput> inputNodes, Long graphId) {
+    public Map<Long, Long> createNodesWithMap(List<NodeInput> inputNodes, Graph graph) {
 //        nodes get new ids in db
         final var map = new HashMap<Long, Long>();
         inputNodes.forEach(node -> {
@@ -31,7 +32,7 @@ public class NodeService {
             newNode.setIsRoot(node.isRoot());
             newNode.setIncomingNodes(new HashSet<>());
             newNode.setOutgoingNodes(new HashSet<>());
-            newNode.setGraphId(graphId);
+            newNode.setGraph(graph);
             nodeRepository.save(newNode);
             map.put(node.id(), newNode.getId());
         });

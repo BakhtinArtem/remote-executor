@@ -30,7 +30,9 @@ public class Graph implements Serializable {
     @Column
     private String name;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY) // not very efficient
-    @JoinColumn(name = "graph_id", referencedColumnName = "id")
+    @OneToMany(cascade = CascadeType.REMOVE, fetch = FetchType.LAZY, mappedBy = "graph")
     private List<Node> nodes = new ArrayList<>();
+
+    @Transient
+    private List<Edge> edges;
 }
