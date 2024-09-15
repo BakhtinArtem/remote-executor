@@ -6,3 +6,28 @@ body {
     width: 2.5rem;
     height: 2.5rem;
 }
+
+.file-upload-button {
+    .p-button-label {
+        display: none
+    }
+    .p-button.p-component.p-fileupload-choose {
+        border-radius: 0;
+        min-width: unset;
+        height: 100%;
+        .p-icon {
+            margin: 0;
+        }
+    }
+}
+
+.graph-save-button {
+    z-index: 1001;
+    margin: 1em;
+    right: 0;
+    position: absolute;
+    opacity: 0.2;
+    &:hover {
+        opacity: 1;
+    }
+}

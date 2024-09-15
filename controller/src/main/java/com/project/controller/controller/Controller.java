@@ -95,6 +95,11 @@ public class Controller {
     }
 
     @MutationMapping
+    public Graph updateGraph(@Argument GraphInput input) {
+        return graphService.updateGraph(input);
+    }
+
+    @MutationMapping
     public Long deleteGraph(@Argument Long graphId) {
         return graphService.deleteGraph(graphId);
     }

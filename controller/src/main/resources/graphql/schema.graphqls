@@ -6,10 +6,12 @@ type Query {
 
 type Mutation {
     createGraph(input: GraphInput): Graph!
+    updateGraph(input: GraphInput): Graph!
     deleteGraph(graphId: ID): ID
 }
 
 input GraphInput {
+    id: ID
     name: String!
     nodes: [NodeInput!]!
     edges: [EdgeInput!]!

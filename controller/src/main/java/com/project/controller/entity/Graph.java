@@ -33,6 +33,9 @@ public class Graph implements Serializable {
     @OneToMany(cascade = CascadeType.REMOVE, fetch = FetchType.LAZY, mappedBy = "graph")
     private List<Node> nodes = new ArrayList<>();
 
+    @OneToMany(cascade = CascadeType.REMOVE, fetch = FetchType.LAZY, mappedBy = "graph")
+    private List<Execution> executions = new ArrayList<>();
+
     @Transient
     private List<Edge> edges;
 }

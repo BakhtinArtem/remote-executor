@@ -38,4 +38,9 @@ public class NodeService {
         });
         return map;
     }
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void deleteGraphNodes(Graph graph) {
+        nodeRepository.deleteAll(graph.getNodes());
+    }
 }

@@ -1,8 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
-// apollo client
-
 import './index.css'
 // react flow
 import '@xyflow/react/dist/style.css'
@@ -46,10 +44,10 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-      <ApolloProvider client={client}>
-          <PrimeReactProvider>
-                <RouterProvider router={router} />
-          </PrimeReactProvider>
-      </ApolloProvider>
+      <PrimeReactProvider>
+          <ApolloProvider client={client}>
+              <RouterProvider router={router} />
+          </ApolloProvider>
+      </PrimeReactProvider>
   </StrictMode>,
 )

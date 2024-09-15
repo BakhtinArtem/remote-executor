@@ -1,12 +1,23 @@
 import { gql } from '@apollo/client'
 
 export const GRAPH_BY_ID = gql`
-    query {
-        graphById(id: "1") {
+    query GraphById($id: ID) {
+        graphById(id: $id) {
             id,
             nodes {
                 id,
-                filename
+                filename,
+                image,
+                isRoot
+            },
+            edges {
+                id,
+                fromNode {
+                    id
+                }
+                toNode {
+                    id
+                }
             }
         }
     }
@@ -30,6 +41,25 @@ export const ALL_GRAPHS = gql`
 export const CREATE_GRAPH = gql`
     mutation createGraph($input: GraphInput!) {
         createGraph(input: $input) {
+            name
+            nodes {
+                id
+                filename
+                image
+                isRoot
+            }
+            edges {
+                id
+                fromNode { id }
+                toNode { id }
+            }
+        }
+    }
+`
+
+export const UPDATE_GRAPH = gql`
+    mutation updateGraph($input: GraphInput!) {
+        updateGraph(input: $input) {
             name
             nodes {
                 id

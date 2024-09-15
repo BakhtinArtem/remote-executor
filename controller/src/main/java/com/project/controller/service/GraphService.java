@@ -87,6 +87,15 @@ public class GraphService {
         return newGraph;
     }
 
+    @Transactional(isolation = Isolation.READ_UNCOMMITTED)
+    public Graph updateGraph(GraphInput graphInput) {
+        final var graph = graphRepository.findById(graphInput.id()).orElseThrow();
+        nodeService.deleteGraphNodes(graph);
+        final var oldIdToId = nodeService.createNodesWithMap(graphInput.nodes(), graph);
+        edgeService.createEdges(graphInput.edges(), oldIdToId);
+        return graph;
+    }
+
     @Transactional
     public Execution executeGraph(Long graphId) {
         final var graph = thisProxy.graphById(graphId);

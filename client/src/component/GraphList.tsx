@@ -10,9 +10,11 @@ import {parseError} from "./Util.tsx";
 import {FloatLabel} from "primereact/floatlabel";
 import {useMutation, useQuery} from "@apollo/client";
 import {ALL_GRAPHS, CREATE_GRAPH, DELETE_GRAPH} from "../query/Queries.ts";
+import {useNavigate} from "react-router-dom";
 
 export default function GraphList() {
-    const [graphId, setGraphId, toast] = useGraph();
+    const [graphId, setGraphId, toast, setActiveIndex, graphName, setGraphName] = useGraph();
+    const navigate = useNavigate();
     const [selectedGraph, setSelectedGraph] = useState(null);
 
     const [ createGraphQuery ] = useMutation(CREATE_GRAPH)
@@ -44,7 +46,12 @@ export default function GraphList() {
     const actionBodyTemplate = (rowData) => {
         return (
             <Fragment>
-                <Button icon="pi pi-pencil" rounded outlined className="mr-2 action-button" onClick={() => console.log(rowData)} />
+                <Button icon="pi pi-pencil" rounded outlined className="mr-2 action-button" onClick={event => {
+                    setGraphId(rowData.id)
+                    setGraphName(rowData.name)
+                    setActiveIndex(1)
+                    navigate("/editor")
+                }} />
                 <Button icon="pi pi-trash" rounded outlined severity="danger" className="action-button" onClick={() => {
                     setSelectedGraph(rowData)
                     setDeleteGraphDialogVisible(true)
@@ -77,14 +84,12 @@ export default function GraphList() {
     const onSubmit = (data) => {
         createGraphQuery({ variables: { input: {name: data.name, edges: data.edges ?? [], nodes: data.nodes ?? []} as GraphInput }})
             .then(graph => {
-                console.log(graph)
                 toast.current.show({ severity: 'success', summary: 'Graph Created', detail: `${graph.data.createGraph.name} created` });
                 allGraphsQuery.refetch();
             })
             .catch(err => {
                 toast.current.show({ severity: 'error', summary: 'Error creating graph', detail: ""})
             });
-        // fetch('http://localhost:8080/v1/jar', { method: "GET" }).then(it => it.json()).then(it => console.log(it))
         reset();
         setCreatedDialogVisible(false);
     };
