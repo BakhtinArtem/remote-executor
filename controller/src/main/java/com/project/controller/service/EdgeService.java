@@ -37,7 +37,7 @@ public class EdgeService {
     }
 
     @Transactional
-    public Edge getEdgesForNode(Node node) {
-        return edgeRepository.findByFromNode(node).orElse(null);
+    public List<Edge> getEdgesForNode(Node node) {
+        return edgeRepository.findAllByFromNode(node);
     }
 }

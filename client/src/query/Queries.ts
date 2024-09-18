@@ -29,10 +29,15 @@ export const ALL_GRAPHS = gql`
             id
             name
             nodes {
-                id
                 filename
                 image
                 isRoot
+            }
+            executions {
+                id
+                startTime
+                endTime
+                status
             }
         }
     }
@@ -79,5 +84,16 @@ export const UPDATE_GRAPH = gql`
 export const DELETE_GRAPH = gql`
     mutation deleteGraph($graphId: ID) {
         deleteGraph(graphId: $graphId)
+    }
+`
+
+export const EXECUTE_GRAPH = gql`
+    query executeGraph($graphId: ID) {
+        executeGraph(graphId: $graphId) {
+            id
+            startTime
+            endTime
+            status
+        }
     }
 `

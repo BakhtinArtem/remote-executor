@@ -113,4 +113,7 @@ public class Controller {
     public List<Edge> edges(Graph graph) {
         return graphService.getGraphEdges(graph.getId());
     }
+
+    @SchemaMapping
+    public List<Execution> executions(Graph graph) { return graphService.getGraphExecutions(graph.getId()); }
 }

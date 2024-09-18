@@ -1,5 +1,4 @@
 import {FieldValues, UseFormStateReturn} from "react-hook-form";
-import React from "react";
 import {Message} from "primereact/message";
 
 export function parseError(formState: UseFormStateReturn<FieldValues>, fieldName: string): React.JSX.Element | null {
@@ -25,5 +24,5 @@ export function getApiUrl(... paths) {
 }
 
 export function getGraphQlUrl() {
-    return 'http://localhost:8080/graphql'
+    return getApiUrl('graphql')
 }

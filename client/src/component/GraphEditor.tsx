@@ -1,8 +1,8 @@
-import React, {useEffect, useState} from 'react';
-import {useCallback} from 'react'
+import {useCallback, useEffect} from 'react';
 import {
     addEdge,
     Background,
+    BackgroundVariant,
     Controls,
     ReactFlow,
     ReactFlowProvider,
@@ -14,8 +14,9 @@ import {useGraph} from "./App.tsx";
 import TaskNode from "../node/TaskNode.tsx";
 import {Button} from "primereact/button";
 import {useNavigate} from "react-router-dom";
-import {useLazyQuery, useMutation, useQuery} from "@apollo/client";
-import {ALL_GRAPHS, CREATE_GRAPH, GRAPH_BY_ID, UPDATE_GRAPH} from "../query/Queries.ts";
+import {useLazyQuery, useMutation} from "@apollo/client";
+import {GRAPH_BY_ID, UPDATE_GRAPH} from "../query/Queries.ts";
+import {getApiUrl} from "./Util.tsx";
 
 /*
 * todo: layout libraries
@@ -48,7 +49,7 @@ function GraphEditor() {
         let blob = await fetch(file.objectURL).then((r) => r.blob());
         formData.append("jar", blob)
         formData.append("fileName", file.name)
-        fetch('http://localhost:8080/v1/jar', { method: "POST", body: formData  })
+        fetch(getApiUrl('v1', 'jar'), { method: "POST", body: formData  })
             .then(() => toast.current.show({ severity: 'success', summary: 'File uploaded', detail: `${file.name} successfully uploaded` }))
             .catch(() => toast.current.show({severity: 'error', summary: 'File uploading error', detail: `${file.name} failed to upload`}))
             //  reload all nodes
@@ -77,7 +78,10 @@ function GraphEditor() {
     useEffect(() => {
         graphByIdQuery().then(it => {
             if (!it.data || !('graphById' in it.data)) { return }   //  no graph exists
-            if (it.data.graphById.nodes.length === 0 && it.data.graphById.edges.length === 0) { return }   //  empty graph
+            if (it.data.graphById.nodes.length === 0 && it.data.graphById.edges.length === 0) { //  empty graph
+                fetchJars() //  load jars to initial node
+                return
+            }
             const data = it.data.graphById
             setNodes(() => data.nodes.map((node) => {
                 return {
@@ -112,7 +116,7 @@ function GraphEditor() {
         }
     }, [])
 
-    const fetchJars = () => fetch('http://localhost:8080/v1/jar', { method: "GET" })
+    const fetchJars = () => fetch(getApiUrl('v1', 'jar'), { method: "GET" })
         .then(it => it.json())
         .then(it => {
             setNodes((nodes) => {
@@ -146,6 +150,7 @@ function GraphEditor() {
                     type: 'taskNode',
                     origin: [0.5, 0.0],
                 };
+                // @ts-ignore
                 setNodes((nodes) => [ ... nodes, newNode]);
                 setEdges((eds) => eds.concat({ id, source: connectionState.fromNode.id, target: id }));
                 fetchJars()
@@ -155,8 +160,6 @@ function GraphEditor() {
     );
 
     const onGraphSave = () => {
-        console.log(nodes)
-        console.log(edges)
         const graphInput = {
             id: graphId,
             name: graphName,
@@ -190,7 +193,7 @@ function GraphEditor() {
                     nodeTypes={nodeTypes}
                 >
                     <Controls />
-                    <Background variant="dots" gap={12} size={1} />
+                    <Background variant={BackgroundVariant.Cross} gap={12} size={1} />
                 </ReactFlow>
             </div>
         </>

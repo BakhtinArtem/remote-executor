@@ -11,4 +11,9 @@ Kubernetes network:
 In minikube use host.minikube.internal to access host
 Another way to access pod: kubectl exec -i --tty mycurlpod -- sh
 Interactive shell: kubectl run my-shell --rm -i --tty --image ubuntu -- bash
+LoadBalancer tunneling - https://minikube.sigs.k8s.io/docs/handbook/accessing/
+
+Debugging network: (test if target is reachable from source)
+kubectl -n default exec -ti <NAME_POD_SOURCE> nslookup kubernetes.default <IP_TARGET>
+kubectl exec -i -t client-deployment-5d888d445c-vz4vr -- nslookup kubernetes.default
 

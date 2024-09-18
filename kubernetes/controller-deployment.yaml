@@ -19,17 +19,31 @@ spec:
 #            todo: get values from config map + secret
             - name: JAR_FILES_PATH
               value: "/jars"
-            - name: POSTGRES_EXTERNAL_PORT
-              value: "5432"
-            - name: POSTGRES_USER
-              value: "postgres"
-            - name: POSTGRES_PASSWORD
-              value: "postgres"
+            - name: DB_EXTERNAL_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: main-config-map
+                  key: DB_EXTERNAL_PORT
+            - name: DB_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: main-config-map
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: main-config-map
+                  key: DB_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: main-config-map
+                  key: DB_NAME
           volumeMounts:
             - mountPath: "/jars"
               name: jars-storage
           ports:
-            - containerPort: 80
+            - containerPort: 8080
       volumes:
         - name: jars-storage
           persistentVolumeClaim:

@@ -1,7 +1,7 @@
 type Query {
     allGraphs: [Graph]!
     graphById(id: ID): Graph
-    executeGraph(graphId: Int): Execution!
+    executeGraph(graphId: ID): Execution!
 }
 
 type Mutation {
@@ -47,7 +47,9 @@ enum ExecutionStatus {
     IDLE,
     RUNNING,
     ERROR,
-    FINISHED
+    FINISHED,
+    FAILED,
+    SUCCEEDED
 }
 
 type Execution {
@@ -62,4 +64,5 @@ type Graph {
     name: String!
     nodes: [Node]!
     edges: [Edge]!
+    executions: [Execution]!
 }

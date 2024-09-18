@@ -61,9 +61,12 @@ public class GraphService {
     }
 
     @Transactional
+    public List<Execution> getGraphExecutions(Long id) { return graphById(id).getExecutions(); }
+
+    @Transactional
     public List<Edge> getGraphEdges(Long id) {
 //        bruh ...
-          return thisProxy.getGraphNodes(id).stream().map(node -> edgeService.getEdgesForNode(node)).filter(Objects::nonNull).toList();
+          return thisProxy.getGraphNodes(id).stream().flatMap(node -> edgeService.getEdgesForNode(node).stream()).filter(Objects::nonNull).toList();
     }
 
     @Transactional(isolation = Isolation.READ_UNCOMMITTED)  //  to read uncommitted nodes during edge insertion
@@ -109,5 +112,4 @@ public class GraphService {
     public Long deleteGraph(Long graphId) {
         return graphRepository.deleteGraphById(graphId).orElseThrow();
     }
-
 }
