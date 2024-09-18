@@ -18,30 +18,20 @@ import {useLazyQuery, useMutation} from "@apollo/client";
 import {GRAPH_BY_ID, UPDATE_GRAPH} from "../query/Queries.ts";
 import {getApiUrl} from "./Util.tsx";
 
-/*
-* todo: layout libraries
-* */
 function GraphEditor() {
 
-    let id = 1;
+    const [graphId, setGraphId, toast,setActiveIndex, graphName, setGraphName] = useGraph();
+
     const nodeTypes = { taskNode: TaskNode };
+    const getId = () => `${++id}`;
+    let id = 1;
+    const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
+    const [graphByIdQuery] = useLazyQuery(GRAPH_BY_ID, { fetchPolicy: 'no-cache', variables: { id: graphId }})
+    const [ updateGraphQuery ] = useMutation(UPDATE_GRAPH)
+    const { screenToFlowPosition } = useReactFlow();
 
-    const onChange = (event) => {
-        setNodes((nodes) => nodes.map(node => {
-            const isTargetNode = node.id == event.target.id.split('-')[1];
-            if (isTargetNode) {
-                const elementType = event.target.id.split('-')[0]
-                const value = event.target.value ?? event.checked;
-                switch (elementType) {
-                    default:
-                        node.data[elementType] = value  //  example: node.data['selectedJar'] = value
-                }
-                return { ... node, data: { ... node.data }} // recreate object
-            }
-            return node;
-        }))
-    }
+    const navigate = useNavigate();
 
     const uploadHandler = async (event) => {
         const formData  = new FormData();
@@ -59,21 +49,26 @@ function GraphEditor() {
             } )
     }
 
-    const [graphId, setGraphId, toast,setActiveIndex, graphName, setGraphName] = useGraph();
-    const [graphByIdQuery] = useLazyQuery(GRAPH_BY_ID, { fetchPolicy: 'no-cache', variables: { id: graphId }})
-
+    const onChange = (event) => {
+        setNodes((nodes) => nodes.map(node => {
+            const isTargetNode = node.id == event.target.id.split('-')[1];
+            if (isTargetNode) {
+                const elementType = event.target.id.split('-')[0]
+                const value = event.target.value ?? event.checked;
+                switch (elementType) {
+                    default:
+                        node.data[elementType] = value  //  example: node.data['selectedJar'] = value
+                }
+                return { ... node, data: { ... node.data }} // recreate object
+            }
+            return node;
+        }))
+    }
 
     const initialNodes = [
         { id: '' + id, position: { x: 0, y: 0 }, data: { id: '' + id, label: `Node ${id}`, checked: false, jars: [], selectedJar: '', image: '', isRoot: false, uploadHandler, onChange }, type: 'taskNode' },
     ];
-
-
-    const getId = () => `${++id}`;
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-    const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-    const [ updateGraphQuery ] = useMutation(UPDATE_GRAPH)
-    const { screenToFlowPosition } = useReactFlow();
-    const navigate = useNavigate();
 
     useEffect(() => {
         graphByIdQuery().then(it => {
@@ -175,8 +170,9 @@ function GraphEditor() {
                 to: +edge.target
             }))
         }
-        updateGraphQuery({ variables: { input: graphInput }}).then(it => console.log(it))
-            .catch(err => console.log(err))
+        updateGraphQuery({ variables: { input: graphInput }})
+            .then(() => toast.current.show({ severity: 'success', summary: 'Graph saved', detail: `${graphInput.name} successfully saved` }))
+            .catch(() => toast.current.show({severity: 'error', summary: 'Graph saving error', detail: `${graphInput.name} failed to save`}))
     }
 
     return (

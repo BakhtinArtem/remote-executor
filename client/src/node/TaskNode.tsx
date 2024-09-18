@@ -1,4 +1,4 @@
-import {memo, useRef} from "react";
+import {memo} from "react";
 import {Handle, Position} from "@xyflow/react";
 import {InputText} from "primereact/inputtext";
 import {ToggleButton} from "primereact/togglebutton";

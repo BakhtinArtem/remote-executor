@@ -17,7 +17,7 @@ import GraphList from "./component/GraphList.tsx";
 import App from "./component/App.tsx";
 import GraphEditor from "./component/GraphEditor.tsx";
 import {getGraphQlUrl} from "./component/Util.tsx";
-import {ApolloProvider, HttpLink, ApolloClient, from, InMemoryCache} from "@apollo/client";
+import {ApolloProvider, HttpLink, ApolloClient, InMemoryCache} from "@apollo/client";
 
 const link = new HttpLink({
     uri: getGraphQlUrl(),

@@ -2,6 +2,7 @@ package com.project.controller.handler;
 
 import com.project.controller.exception.CycleDetectedException;
 import com.project.controller.exception.MultiComponentDetectedException;
+import com.project.controller.exception.MultipleRootException;
 import graphql.ErrorType;
 import graphql.GraphQLError;
 import graphql.schema.DataFetchingEnvironment;
@@ -23,6 +24,7 @@ public class GraphQLExceptionHandler extends DataFetcherExceptionResolverAdapter
         return switch (ex) {
             case CycleDetectedException cycleEx -> buildCustomMessage(ex, ErrorType.ValidationError);
             case MultiComponentDetectedException componentEx -> buildCustomMessage(ex, ErrorType.ValidationError);
+            case MultipleRootException componentEx -> buildCustomMessage(ex, ErrorType.ValidationError);
             default -> super.resolveToSingleError(ex, env);
         };
     }

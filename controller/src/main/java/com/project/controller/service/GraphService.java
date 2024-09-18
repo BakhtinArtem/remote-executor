@@ -6,6 +6,7 @@ import com.project.controller.entity.Graph;
 import com.project.controller.entity.Node;
 import com.project.controller.exception.CycleDetectedException;
 import com.project.controller.exception.MultiComponentDetectedException;
+import com.project.controller.exception.MultipleRootException;
 import com.project.controller.model.GraphInput;
 import com.project.controller.repository.GraphRepository;
 import com.project.controller.util.GraphUtil;
@@ -70,16 +71,8 @@ public class GraphService {
     }
 
     @Transactional(isolation = Isolation.READ_UNCOMMITTED)  //  to read uncommitted nodes during edge insertion
-    public Graph createGraph(GraphInput graphInput) throws CycleDetectedException, MultiComponentDetectedException {
-//        validate graph - graph should have one component and be acyclic
-        final var cycle = GraphUtil.findCycle(graphInput);
-        if (cycle.isPresent()) {
-            throw new CycleDetectedException(cycle.get());
-        }
-
-        if (GraphUtil.isMultiComponent(graphInput)) {
-            throw new MultiComponentDetectedException();
-        }
+    public Graph createGraph(GraphInput graphInput) throws CycleDetectedException, MultiComponentDetectedException, MultipleRootException {
+        validateGraph(graphInput);
 
         var newGraph = new Graph();
         newGraph.setName(graphInput.name());
@@ -91,12 +84,29 @@ public class GraphService {
     }
 
     @Transactional(isolation = Isolation.READ_UNCOMMITTED)
-    public Graph updateGraph(GraphInput graphInput) {
+    public Graph updateGraph(GraphInput graphInput) throws MultiComponentDetectedException, CycleDetectedException, MultipleRootException {
+        validateGraph(graphInput);
+
         final var graph = graphRepository.findById(graphInput.id()).orElseThrow();
         nodeService.deleteGraphNodes(graph);
         final var oldIdToId = nodeService.createNodesWithMap(graphInput.nodes(), graph);
         edgeService.createEdges(graphInput.edges(), oldIdToId);
         return graph;
+    }
+
+    private void validateGraph(GraphInput graphInput) throws CycleDetectedException, MultiComponentDetectedException, MultipleRootException {
+//        validate graph - graph should have one component and be acyclic
+        if (GraphUtil.isMultipleRoot(graphInput)) {
+            throw new MultipleRootException();
+        }
+        final var cycle = GraphUtil.findCycle(graphInput);
+        if (cycle.isPresent()) {
+            throw new CycleDetectedException(cycle.get());
+        }
+
+        if (GraphUtil.isMultiComponent(graphInput)) {
+            throw new MultiComponentDetectedException();
+        }
     }
 
     @Transactional

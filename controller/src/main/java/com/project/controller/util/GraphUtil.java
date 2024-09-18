@@ -26,6 +26,10 @@ public class GraphUtil {
         return false;
     }
 
+    public static boolean isMultipleRoot(GraphInput graphInput) {
+        return graphInput.nodes().stream().filter(NodeInput::isRoot).count() > 1;
+    }
+
     private static Optional<Set<Long>> dfs(GraphInput graphInput, NodeInput nodeInput, Set<Long> idsInPath) {
         idsInPath.add(nodeInput.id());
         for (final var nodeInputDescendant : graphInput.getSuccessor(nodeInput, true)) {
